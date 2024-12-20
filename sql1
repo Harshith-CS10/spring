@@ -1,0 +1,93 @@
+
+
+DECLARE  
+    v_date DATE := TO_DATE('01-NOV-2024', 'DD-MON-YYYY');  
+    v_basic_salary NUMBER(10, 2) := 5475;  
+    v_increment NUMBER(10, 2) := 0;  
+    v_future_date DATE := TO_DATE('01-MAY-2026', 'DD-MON-YYYY');  
+    v_grade_from VARCHAR2(50) := 'G9';  
+    v_grade_to VARCHAR2(50);  
+  
+BEGIN  
+    -- Loop through the years  
+    FOR i IN 2024..2047 LOOP  
+        -- Determine the increment based on the year  
+        IF i = 2025 THEN  
+            v_increment := 119;  
+        ELSIF i = 2026 THEN  
+            v_increment := 134;  
+        ELSIF i = 2030 THEN  
+            v_increment := 139;  
+        ELSIF i = 2034 THEN  
+            v_increment := 145;  
+        ELSIF i = 2039 THEN  
+            v_increment := 156;  
+        END IF;  
+  
+        -- Loop through the months  
+        FOR month IN 1..12 LOOP  
+            -- Skip months outside the defined range for specific years  
+            IF (i = 2024 AND month < 11) THEN  
+                CONTINUE;  
+            ELSIF (i = 2047 AND month > 4) THEN  
+                CONTINUE;  
+            END IF;  
+  
+            -- Apply the increment to the basic salary  
+            v_basic_salary := v_basic_salary + v_increment;  
+  
+            -- Determine `grade_to` value based on the date  
+            IF i = 2026 AND month = 5 THEN  
+                v_grade_to := 'G10'; -- Update grade_to to G10 from May 2026  
+            ELSIF i > 2026 OR (i = 2026 AND month >= 5) THEN  
+                v_grade_to := 'G10'; -- Maintain G10 for dates after May 2026  
+            ELSE  
+                v_grade_to := NULL; -- Leave grade_to empty for earlier dates  
+            END IF;  
+  
+            -- Insert data into EmployeePromotions table  
+            INSERT INTO EmployeeePromotions (  
+                "date",   
+                org_unit,   
+                grade_from,   
+                grade_to,   
+                basic_salary,   
+                increment_amount,   
+                derivatives,   
+                total_salary,   
+                promotion_year,   
+                revised_basic_salary  
+            ) VALUES (  
+                ADD_MONTHS(v_date, (i - 2024) * 12 + month - 1),   
+                'OrgUnit1',   
+                v_grade_from,   
+                v_grade_to,   
+                v_basic_salary,   
+                v_increment,   
+                0,   
+                v_basic_salary + v_increment,   
+                i,   
+                v_basic_salary  
+            );  
+  
+        END LOOP; -- End of month loop  
+    END LOOP; -- End of year loop  
+END; 
+
+ORA-06550: line 47, column 25: PL/SQL: ORA-00942: table or view does not exist
+
+More Details: https://docs.oracle.com/error-help/db/ora-06550
+Statement 3
+
+CREATE TABLE EmployeeePromotions (   
+    "date" DATE,   
+    org_unit VARCHAR2(100),   
+    grade_from VARCHAR2(50),   
+    grade_to VARCHAR2(50),   
+    basic_salary NUMBER(10,2),   
+    increment_amount NUMBER(10,2),   
+    derivatives NUMBER(10,2),   
+    total_salary NUMBER(10,2),   
+    promotion_year NUMBER(4),   
+    revised_basic_salary NUMBER(10,2)   
+)
